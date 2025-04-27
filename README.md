@@ -12,9 +12,11 @@
 │   └── picture/               # 데이터 시각화 결과
 │       ├── picture_High_impact/  # 주요 영향 요인 시각화
 │       └── picture_main/         # 전체 요인 시각화
+│       └── train_results/        # 학습 결과
 └── src/
     ├── data_processing/       # 데이터 전처리 관련 코드
     └── model_training/        # 모델 학습 관련 코드
+    └── visualization          # 시각화 함수
 ```
 
 ## 주요 기능
