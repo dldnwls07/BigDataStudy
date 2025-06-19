@@ -1,16 +1,9 @@
-# -*- coding: utf-8 -*-
 # 모델 테스트
 
 import os
-import sys
-import io
-
-# 표준 출력 인코딩 설정
-sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
-
 import torch
 from torch.utils.data import DataLoader
-from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error  # 이 라인 추가
+from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error
 import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
 import numpy as np
@@ -90,7 +83,6 @@ def mean_absolute_percentage_error(y_true, y_pred):
     return np.mean(np.abs((y_true - y_pred) / (y_true + 1e-8))) * 100
 
 def plot_predictions_vs_actuals(actuals, predictions, output_path):
-    """예측값과 실제값 비교 그래프 생성"""
     plt.figure(figsize=(8, 6))
     plt.scatter(actuals, predictions, alpha=0.6, color='blue', label='Predictions')
     plt.plot([min(actuals), max(actuals)], [min(actuals), max(actuals)], color='red', linestyle='--', label='Ideal Fit')
@@ -100,21 +92,6 @@ def plot_predictions_vs_actuals(actuals, predictions, output_path):
     plt.legend()
     plt.grid(True)
     plt.savefig(output_path)
-    plt.close()
-
-def plot_residuals(actuals, predictions, output_path):
-    """잔차 플롯 생성"""
-    residuals = np.array(actuals) - np.array(predictions)
-    plt.figure(figsize=(8, 6))
-    plt.scatter(predictions, residuals, alpha=0.6, color='green', label='Residuals')
-    plt.axhline(y=0, color='red', linestyle='--', label='Zero Error Line')
-    plt.title('Residuals vs Predicted Values')
-    plt.xlabel('Predicted Values')
-    plt.ylabel('Residuals')
-    plt.legend()
-    plt.grid(True)
-    plt.savefig(output_path)
-    plt.close()
 
 def test_model(test_csv, model_path):
     try:
@@ -160,16 +137,10 @@ def test_model(test_csv, model_path):
         output_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         output_dir = os.path.join(output_dir, "picture", "train_results")
         os.makedirs(output_dir, exist_ok=True)
-
-        # 예측값 vs 실제값 그래프
-        predictions_vs_actuals_path = os.path.join(output_dir, "predictions_vs_actuals.png")
-        plot_predictions_vs_actuals(actuals, predictions, predictions_vs_actuals_path)
-        print(f"예측값과 실제값 비교 그래프가 저장되었습니다: {predictions_vs_actuals_path}")
-
-        # 잔차 플롯
-        residuals_plot_path = os.path.join(output_dir, "residuals_plot.png")
-        plot_residuals(actuals, predictions, residuals_plot_path)
-        print(f"잔차 플롯이 저장되었습니다: {residuals_plot_path}")
+        output_path = os.path.join(output_dir, "predictions_vs_actuals.png")
+        
+        plot_predictions_vs_actuals(actuals, predictions, output_path)
+        print(f"예측값과 실제값 비교 그래프가 저장되었습니다: {output_path}")
         
     except Exception as e:
         print(f"모델 테스트 중 오류 발생: {str(e)}")

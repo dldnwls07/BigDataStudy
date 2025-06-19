@@ -122,8 +122,7 @@ def improved_train_and_evaluate(
     train_csv, test_csv,
     epochs=50, batch_size=16, learning_rate=0.0005, weight_decay=1e-5,
     activation='relu', dropout_rates=(0.3, 0.2, 0.1),
-    use_kfold=False, n_splits=5,
-    print_results=False  # 결과 출력 여부를 제어하는 매개변수 추가
+    use_kfold=False, n_splits=5
 ):
     # 데이터 로드
     train_dataset = ImprovedStudentDataset(train_csv, is_train=True)
@@ -243,7 +242,7 @@ def improved_train_and_evaluate(
             print(f"Early stopping at epoch {epoch+1}")
             break
     try:
-        model.load_state_dict(torch.load("src/model_training/refactored/model/best_model.pth", weights_only=True))
+        model.load_state_dict(torch.load("src/model_training/refactored/model/best_model.pth"))
     except Exception as e:
         print(f"모델 로드 중 오류 발생: {e}")
     model.eval()
@@ -259,24 +258,23 @@ def improved_train_and_evaluate(
     r2 = r2_score(actuals, predictions)
     mae = mean_absolute_error(actuals, predictions)
     mape = mean_absolute_percentage_error(actuals, predictions)
-    
-    if print_results:
-        print("테스트 데이터 평균 제곱 오차(MSE): {:.4f}".format(mse))
-        print("테스트 데이터 R² 점수: {:.4f}".format(r2))
-        print("테스트 데이터 MAE: {:.4f}".format(mae))
-        print("테스트 데이터 MAPE: {:.2f}%".format(mape))
+    print(f"테스트 데이터 평균 제곱 오차(MSE): {mse:.4f}")
+    print(f"테스트 데이터 R² 점수: {r2:.4f}")
+    print(f"테스트 데이터 MAE: {mae:.4f}")
+    print(f"테스트 데이터 MAPE: {mape:.2f}%")
 
     # 모델 저장 디렉토리 확인 및 생성
     model_dir = "src/model_training/refactored/model"
     os.makedirs(model_dir, exist_ok=True)
+    best_model_path = os.path.join(model_dir, "best_model.pth")
     final_model_path = os.path.join(model_dir, "student_performance_model_improved.pth")
     
     # 최종 모델 저장
     try:
         torch.save(model.state_dict(), final_model_path)
-        print("모델이 저장되었습니다:", final_model_path)
+        print(f"개선된 모델이 저장되었습니다: {final_model_path}")
     except Exception as e:
-        print("모델 저장 중 오류 발생:", e)
+        print(f"모델 저장 중 오류 발생: {e}")
     
     # 학습 및 검증 손실 시각화
     plt.figure(figsize=(10, 6))
@@ -294,4 +292,4 @@ def improved_train_and_evaluate(
 if __name__ == "__main__":
     train_csv = "data/processed_data/TrainFactors.csv"  
     test_csv = "data/processed_data/TestFactors.csv"  
-    model, r2 = improved_train_and_evaluate(train_csv, test_csv, print_results=False)  # 결과 출력 비활성화
+    model, r2 = improved_train_and_evaluate(train_csv, test_csv)
