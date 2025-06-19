@@ -41,8 +41,8 @@ def create_dataset_summary(data, output_path):
         # 컬럼 이름을 더 짧게 수정
         stats = stats.rename_axis("변수명")
         
-        # 그림 크기 설정 (더 큰 크기로 조정)
-        plt.figure(figsize=(18, 12))
+        # 그림 크기 설정 (더 넓게 조정)
+        plt.figure(figsize=(16, 10))
         ax = plt.subplot(111)
         ax.axis('off')
         
@@ -62,42 +62,22 @@ def create_dataset_summary(data, output_path):
         
         # 테이블 스타일 설정
         table.auto_set_font_size(False)
-        table.set_fontsize(9)  # 글자 크기 증가
-        table.scale(1.5, 2.5)  # 가로와 세로 비율 늘림
+        table.set_fontsize(8)  # 글자 크기 줄임
+        table.scale(1.2, 2.0)  # 가로와 세로 비율 늘림
         
-        # 컬럼 너비와 높이 조정
+        # 컬럼 너비 조정
         cell_dict = table.get_celld()
-        
-        # 헤더 행 설정
-        for i in range(len(table_cols)):
-            header_cell = cell_dict[(0, i)]
-            header_cell.set_height(0.15)
-            header_cell.set_fontsize(10)
-            header_cell.set_text_props(weight='bold')
-            header_cell.set_facecolor('#CCCCFF')  # 헤더 배경색 설정
-        
-        # 모든 셀에 테두리 추가
-        for key, cell in cell_dict.items():
-            cell.set_edgecolor('gray')
+        for i in range(0, len(table_cols)):
+            cell_dict[(0, i)].set_height(0.15)
+            cell_dict[(0, i)].set_fontsize(9)
+            cell_dict[(0, i)].set_text_props(weight='bold')
             
-            # 데이터 셀 처리
-            if key[0] > 0:  # 헤더가 아닌 데이터 행
-                cell.set_height(0.15)  # 셀 높이 증가
-                
-                # 짝수/홀수 행 구분을 위한 배경색 설정
-                if key[0] % 2 == 1:
-                    cell.set_facecolor('#F5F5F5')  # 연한 회색
-                
-                # 데이터 타입 컬럼에 특별 스타일 적용
-                if key[1] == table_cols.index('dtype'):
-                    cell.set_facecolor('#EAEAFF')  # 타입 컬럼 배경색
-        
         # 데이터가 10개 이상이면 일부만 표시
         max_rows = 10
         if len(table_data) > max_rows:
-            plt.figtext(0.5, 0.01, f"* 전체 {len(table_data)}개 변수 중 상위 {max_rows}개만 표시됨", ha='center', fontsize=10)
+            plt.figtext(0.5, 0.01, f"* 전체 {len(table_data)}개 변수 중 상위 {max_rows}개만 표시됨", ha='center', fontsize=9)
         
-        plt.title('데이터셋 기본 통계량', fontsize=18, pad=20)
+        plt.title('데이터셋 기본 통계량', fontsize=16)
         plt.tight_layout(rect=[0, 0.03, 1, 0.97])  # 여백 조정
         plt.savefig(output_path, dpi=300, bbox_inches='tight')
         plt.close()
@@ -111,64 +91,27 @@ def create_distribution_plots(data, output_path):
         # 수치형 변수 선택
         numeric_cols = data.select_dtypes(include=['number']).columns
         
-        # 변수 수에 따라 행과 열 계산 - 더 적은 컬럼으로 표시하여 그래프 사이즈 키우기
+        # 변수 수에 따라 행과 열 계산
         n_cols = len(numeric_cols)
-        cols_per_row = 2  # 한 행에 2개의 그래프만 표시
-        n_rows = (n_cols // cols_per_row) + (1 if n_cols % cols_per_row > 0 else 0)
+        n_rows = (n_cols // 3) + (1 if n_cols % 3 > 0 else 0)
         
-        # 그래프 생성 (행당 2개 컬럼, 각 그래프 크기 증가)
-        fig, axes = plt.subplots(n_rows, cols_per_row, figsize=(15, n_rows * 5))
-        
-        # 단일 행 또는 열일 경우 axes를 2D 배열로 변환
-        if n_rows == 1 and cols_per_row == 1:
-            axes = np.array([[axes]])
-        elif n_rows == 1 or cols_per_row == 1:
-            axes = np.array([axes]).reshape(n_rows, cols_per_row)
-            
+        # 그래프 생성
+        fig, axes = plt.subplots(n_rows, 3, figsize=(15, n_rows * 4))
         axes = axes.flatten()
-
-        # 색상 순환 (시각적 구분을 위해)
-        colors = ['#3498db', '#2ecc71', '#e74c3c', '#9b59b6', '#f1c40f', '#1abc9c', '#34495e', '#e67e22']
         
         for i, col in enumerate(numeric_cols):
             if i < len(axes):
-                # 히스토그램 생성 (색상 순환 적용)
-                color_idx = i % len(colors)
-                sns.histplot(data[col], kde=True, ax=axes[i], color=colors[color_idx], 
-                            kde_kws={'color': 'black', 'linewidth': 2, 'alpha': 0.8})
-                
-                # 타이틀 및 라벨 설정 (글꼴 크기 증가)
-                axes[i].set_title(f'{col} 분포', fontsize=14, pad=10)
-                axes[i].set_xlabel(col, fontsize=12)
-                axes[i].set_ylabel('빈도', fontsize=12)
-                
-                # 축 레이블과 눈금 폰트 크기 조정
-                axes[i].tick_params(axis='both', labelsize=10)
-                
-                # 그리드 추가
-                axes[i].grid(True, alpha=0.3)
-                
-                # 분포의 주요 통계량 텍스트로 표시
-                mean_val = data[col].mean()
-                median_val = data[col].median()
-                std_val = data[col].std()
-                
-                # 통계값을 그래프 상단에 표시
-                axes[i].text(0.95, 0.95, f'평균: {mean_val:.2f}\n중앙값: {median_val:.2f}\n표준편차: {std_val:.2f}',
-                           transform=axes[i].transAxes, fontsize=10, ha='right', va='top',
-                           bbox=dict(facecolor='white', alpha=0.8, boxstyle='round,pad=0.5'))
+                sns.histplot(data[col], kde=True, ax=axes[i])
+                axes[i].set_title(f'{col} 분포')
+                axes[i].set_xlabel(col)
+                axes[i].set_ylabel('빈도')
         
         # 남은 축 숨기기
         for i in range(len(numeric_cols), len(axes)):
             axes[i].axis('off')
         
-        # 제목 추가
-        fig.suptitle('주요 변수들의 분포', fontsize=18, y=1.02)
-        
-        # 그래프 간 간격 조정
-        plt.tight_layout(pad=3.0)
-        plt.subplots_adjust(top=0.95)  # 상단 여백 조정
-        plt.savefig(output_path, dpi=300, bbox_inches='tight')
+        plt.tight_layout()
+        plt.savefig(output_path, dpi=300)
         plt.close()
         print(f"2. 데이터 분포 시각화 완료: {output_path}")
     except Exception as e:
@@ -245,45 +188,23 @@ def create_feature_importance_visualization(data, output_path):
             top_correlations = correlations.abs().nlargest(top_count)
             top_features = top_correlations.index
             
-            # 그림 크기 증가 및 여백 확보
-            plt.figure(figsize=(12, 8))
-            
-            # 바 차트 생성 (y축 글꼴 크기 조정)
+            plt.figure(figsize=(10, 8))
             colors = ['green' if c > 0 else 'red' for c in correlations[top_features]]
+            
+            # 바 차트 생성
             bars = plt.barh(top_features, correlations[top_features], color=colors)
             
-            # y축 라벨 폰트 크기 및 색상 조정
-            plt.yticks(fontsize=11)
-            
-            # 바 위에 값 표시 (위치 및 여백 조정)
+            # 바 위에 값 표시
             for bar in bars:
                 width = bar.get_width()
-                if width > 0:
-                    # 양수 값은 바 오른쪽에 표시
-                    label_x_pos = width + 0.02  # 바 끝에서 약간 떨어진 위치
-                    plt.text(label_x_pos, bar.get_y() + bar.get_height()/2, f'{width:.2f}', 
-                            va='center', ha='left', color='black', fontsize=10,
-                            bbox=dict(facecolor='white', alpha=0.7, pad=0.1, boxstyle='round'))
-                else:
-                    # 음수 값은 바 왼쪽에 표시
-                    label_x_pos = width - 0.05  # 바 끝에서 약간 떨어진 위치
-                    plt.text(label_x_pos, bar.get_y() + bar.get_height()/2, f'{width:.2f}', 
-                            va='center', ha='right', color='black', fontsize=10,
-                            bbox=dict(facecolor='white', alpha=0.7, pad=0.1, boxstyle='round'))
+                label_x_pos = width if width > 0 else width - 0.05
+                plt.text(label_x_pos, bar.get_y() + bar.get_height()/2, f'{width:.2f}', 
+                         va='center', ha='left' if width > 0 else 'right', color='black')
             
-            # 제목 및 라벨 설정
             plt.title('시험 점수와 주요 변수들의 상관관계', fontsize=16)
-            plt.xlabel('상관계수', fontsize=12)
-            
-            # x축 범위 조정 (여백 추가)
-            x_min, x_max = plt.xlim()
-            plt.xlim(x_min - 0.1, x_max + 0.15)  # 오른쪽에 더 많은 여백 추가
-            
-            # 그리드 추가하여 가독성 향상
-            plt.grid(axis='x', alpha=0.3)
-            
+            plt.xlabel('상관계수')
             plt.tight_layout()
-            plt.savefig(output_path, dpi=300, bbox_inches='tight')
+            plt.savefig(output_path, dpi=300)
             plt.close()
             print(f"4. 변수 중요도 시각화 완료: {output_path}")
         else:

@@ -111,64 +111,27 @@ def create_distribution_plots(data, output_path):
         # 수치형 변수 선택
         numeric_cols = data.select_dtypes(include=['number']).columns
         
-        # 변수 수에 따라 행과 열 계산 - 더 적은 컬럼으로 표시하여 그래프 사이즈 키우기
+        # 변수 수에 따라 행과 열 계산
         n_cols = len(numeric_cols)
-        cols_per_row = 2  # 한 행에 2개의 그래프만 표시
-        n_rows = (n_cols // cols_per_row) + (1 if n_cols % cols_per_row > 0 else 0)
+        n_rows = (n_cols // 3) + (1 if n_cols % 3 > 0 else 0)
         
-        # 그래프 생성 (행당 2개 컬럼, 각 그래프 크기 증가)
-        fig, axes = plt.subplots(n_rows, cols_per_row, figsize=(15, n_rows * 5))
-        
-        # 단일 행 또는 열일 경우 axes를 2D 배열로 변환
-        if n_rows == 1 and cols_per_row == 1:
-            axes = np.array([[axes]])
-        elif n_rows == 1 or cols_per_row == 1:
-            axes = np.array([axes]).reshape(n_rows, cols_per_row)
-            
+        # 그래프 생성
+        fig, axes = plt.subplots(n_rows, 3, figsize=(15, n_rows * 4))
         axes = axes.flatten()
-
-        # 색상 순환 (시각적 구분을 위해)
-        colors = ['#3498db', '#2ecc71', '#e74c3c', '#9b59b6', '#f1c40f', '#1abc9c', '#34495e', '#e67e22']
         
         for i, col in enumerate(numeric_cols):
             if i < len(axes):
-                # 히스토그램 생성 (색상 순환 적용)
-                color_idx = i % len(colors)
-                sns.histplot(data[col], kde=True, ax=axes[i], color=colors[color_idx], 
-                            kde_kws={'color': 'black', 'linewidth': 2, 'alpha': 0.8})
-                
-                # 타이틀 및 라벨 설정 (글꼴 크기 증가)
-                axes[i].set_title(f'{col} 분포', fontsize=14, pad=10)
-                axes[i].set_xlabel(col, fontsize=12)
-                axes[i].set_ylabel('빈도', fontsize=12)
-                
-                # 축 레이블과 눈금 폰트 크기 조정
-                axes[i].tick_params(axis='both', labelsize=10)
-                
-                # 그리드 추가
-                axes[i].grid(True, alpha=0.3)
-                
-                # 분포의 주요 통계량 텍스트로 표시
-                mean_val = data[col].mean()
-                median_val = data[col].median()
-                std_val = data[col].std()
-                
-                # 통계값을 그래프 상단에 표시
-                axes[i].text(0.95, 0.95, f'평균: {mean_val:.2f}\n중앙값: {median_val:.2f}\n표준편차: {std_val:.2f}',
-                           transform=axes[i].transAxes, fontsize=10, ha='right', va='top',
-                           bbox=dict(facecolor='white', alpha=0.8, boxstyle='round,pad=0.5'))
+                sns.histplot(data[col], kde=True, ax=axes[i])
+                axes[i].set_title(f'{col} 분포')
+                axes[i].set_xlabel(col)
+                axes[i].set_ylabel('빈도')
         
         # 남은 축 숨기기
         for i in range(len(numeric_cols), len(axes)):
             axes[i].axis('off')
         
-        # 제목 추가
-        fig.suptitle('주요 변수들의 분포', fontsize=18, y=1.02)
-        
-        # 그래프 간 간격 조정
-        plt.tight_layout(pad=3.0)
-        plt.subplots_adjust(top=0.95)  # 상단 여백 조정
-        plt.savefig(output_path, dpi=300, bbox_inches='tight')
+        plt.tight_layout()
+        plt.savefig(output_path, dpi=300)
         plt.close()
         print(f"2. 데이터 분포 시각화 완료: {output_path}")
     except Exception as e:

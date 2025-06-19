@@ -41,8 +41,8 @@ def create_dataset_summary(data, output_path):
         # 컬럼 이름을 더 짧게 수정
         stats = stats.rename_axis("변수명")
         
-        # 그림 크기 설정 (더 큰 크기로 조정)
-        plt.figure(figsize=(18, 12))
+        # 그림 크기 설정 (더 넓게 조정)
+        plt.figure(figsize=(16, 10))
         ax = plt.subplot(111)
         ax.axis('off')
         
@@ -62,42 +62,22 @@ def create_dataset_summary(data, output_path):
         
         # 테이블 스타일 설정
         table.auto_set_font_size(False)
-        table.set_fontsize(9)  # 글자 크기 증가
-        table.scale(1.5, 2.5)  # 가로와 세로 비율 늘림
+        table.set_fontsize(8)  # 글자 크기 줄임
+        table.scale(1.2, 2.0)  # 가로와 세로 비율 늘림
         
-        # 컬럼 너비와 높이 조정
+        # 컬럼 너비 조정
         cell_dict = table.get_celld()
-        
-        # 헤더 행 설정
-        for i in range(len(table_cols)):
-            header_cell = cell_dict[(0, i)]
-            header_cell.set_height(0.15)
-            header_cell.set_fontsize(10)
-            header_cell.set_text_props(weight='bold')
-            header_cell.set_facecolor('#CCCCFF')  # 헤더 배경색 설정
-        
-        # 모든 셀에 테두리 추가
-        for key, cell in cell_dict.items():
-            cell.set_edgecolor('gray')
+        for i in range(0, len(table_cols)):
+            cell_dict[(0, i)].set_height(0.15)
+            cell_dict[(0, i)].set_fontsize(9)
+            cell_dict[(0, i)].set_text_props(weight='bold')
             
-            # 데이터 셀 처리
-            if key[0] > 0:  # 헤더가 아닌 데이터 행
-                cell.set_height(0.15)  # 셀 높이 증가
-                
-                # 짝수/홀수 행 구분을 위한 배경색 설정
-                if key[0] % 2 == 1:
-                    cell.set_facecolor('#F5F5F5')  # 연한 회색
-                
-                # 데이터 타입 컬럼에 특별 스타일 적용
-                if key[1] == table_cols.index('dtype'):
-                    cell.set_facecolor('#EAEAFF')  # 타입 컬럼 배경색
-        
         # 데이터가 10개 이상이면 일부만 표시
         max_rows = 10
         if len(table_data) > max_rows:
-            plt.figtext(0.5, 0.01, f"* 전체 {len(table_data)}개 변수 중 상위 {max_rows}개만 표시됨", ha='center', fontsize=10)
+            plt.figtext(0.5, 0.01, f"* 전체 {len(table_data)}개 변수 중 상위 {max_rows}개만 표시됨", ha='center', fontsize=9)
         
-        plt.title('데이터셋 기본 통계량', fontsize=18, pad=20)
+        plt.title('데이터셋 기본 통계량', fontsize=16)
         plt.tight_layout(rect=[0, 0.03, 1, 0.97])  # 여백 조정
         plt.savefig(output_path, dpi=300, bbox_inches='tight')
         plt.close()
@@ -111,64 +91,27 @@ def create_distribution_plots(data, output_path):
         # 수치형 변수 선택
         numeric_cols = data.select_dtypes(include=['number']).columns
         
-        # 변수 수에 따라 행과 열 계산 - 더 적은 컬럼으로 표시하여 그래프 사이즈 키우기
+        # 변수 수에 따라 행과 열 계산
         n_cols = len(numeric_cols)
-        cols_per_row = 2  # 한 행에 2개의 그래프만 표시
-        n_rows = (n_cols // cols_per_row) + (1 if n_cols % cols_per_row > 0 else 0)
+        n_rows = (n_cols // 3) + (1 if n_cols % 3 > 0 else 0)
         
-        # 그래프 생성 (행당 2개 컬럼, 각 그래프 크기 증가)
-        fig, axes = plt.subplots(n_rows, cols_per_row, figsize=(15, n_rows * 5))
-        
-        # 단일 행 또는 열일 경우 axes를 2D 배열로 변환
-        if n_rows == 1 and cols_per_row == 1:
-            axes = np.array([[axes]])
-        elif n_rows == 1 or cols_per_row == 1:
-            axes = np.array([axes]).reshape(n_rows, cols_per_row)
-            
+        # 그래프 생성
+        fig, axes = plt.subplots(n_rows, 3, figsize=(15, n_rows * 4))
         axes = axes.flatten()
-
-        # 색상 순환 (시각적 구분을 위해)
-        colors = ['#3498db', '#2ecc71', '#e74c3c', '#9b59b6', '#f1c40f', '#1abc9c', '#34495e', '#e67e22']
         
         for i, col in enumerate(numeric_cols):
             if i < len(axes):
-                # 히스토그램 생성 (색상 순환 적용)
-                color_idx = i % len(colors)
-                sns.histplot(data[col], kde=True, ax=axes[i], color=colors[color_idx], 
-                            kde_kws={'color': 'black', 'linewidth': 2, 'alpha': 0.8})
-                
-                # 타이틀 및 라벨 설정 (글꼴 크기 증가)
-                axes[i].set_title(f'{col} 분포', fontsize=14, pad=10)
-                axes[i].set_xlabel(col, fontsize=12)
-                axes[i].set_ylabel('빈도', fontsize=12)
-                
-                # 축 레이블과 눈금 폰트 크기 조정
-                axes[i].tick_params(axis='both', labelsize=10)
-                
-                # 그리드 추가
-                axes[i].grid(True, alpha=0.3)
-                
-                # 분포의 주요 통계량 텍스트로 표시
-                mean_val = data[col].mean()
-                median_val = data[col].median()
-                std_val = data[col].std()
-                
-                # 통계값을 그래프 상단에 표시
-                axes[i].text(0.95, 0.95, f'평균: {mean_val:.2f}\n중앙값: {median_val:.2f}\n표준편차: {std_val:.2f}',
-                           transform=axes[i].transAxes, fontsize=10, ha='right', va='top',
-                           bbox=dict(facecolor='white', alpha=0.8, boxstyle='round,pad=0.5'))
+                sns.histplot(data[col], kde=True, ax=axes[i])
+                axes[i].set_title(f'{col} 분포')
+                axes[i].set_xlabel(col)
+                axes[i].set_ylabel('빈도')
         
         # 남은 축 숨기기
         for i in range(len(numeric_cols), len(axes)):
             axes[i].axis('off')
         
-        # 제목 추가
-        fig.suptitle('주요 변수들의 분포', fontsize=18, y=1.02)
-        
-        # 그래프 간 간격 조정
-        plt.tight_layout(pad=3.0)
-        plt.subplots_adjust(top=0.95)  # 상단 여백 조정
-        plt.savefig(output_path, dpi=300, bbox_inches='tight')
+        plt.tight_layout()
+        plt.savefig(output_path, dpi=300)
         plt.close()
         print(f"2. 데이터 분포 시각화 완료: {output_path}")
     except Exception as e:
@@ -245,45 +188,23 @@ def create_feature_importance_visualization(data, output_path):
             top_correlations = correlations.abs().nlargest(top_count)
             top_features = top_correlations.index
             
-            # 그림 크기 증가 및 여백 확보
-            plt.figure(figsize=(12, 8))
-            
-            # 바 차트 생성 (y축 글꼴 크기 조정)
+            plt.figure(figsize=(10, 8))
             colors = ['green' if c > 0 else 'red' for c in correlations[top_features]]
+            
+            # 바 차트 생성
             bars = plt.barh(top_features, correlations[top_features], color=colors)
             
-            # y축 라벨 폰트 크기 및 색상 조정
-            plt.yticks(fontsize=11)
-            
-            # 바 위에 값 표시 (위치 및 여백 조정)
+            # 바 위에 값 표시
             for bar in bars:
                 width = bar.get_width()
-                if width > 0:
-                    # 양수 값은 바 오른쪽에 표시
-                    label_x_pos = width + 0.02  # 바 끝에서 약간 떨어진 위치
-                    plt.text(label_x_pos, bar.get_y() + bar.get_height()/2, f'{width:.2f}', 
-                            va='center', ha='left', color='black', fontsize=10,
-                            bbox=dict(facecolor='white', alpha=0.7, pad=0.1, boxstyle='round'))
-                else:
-                    # 음수 값은 바 왼쪽에 표시
-                    label_x_pos = width - 0.05  # 바 끝에서 약간 떨어진 위치
-                    plt.text(label_x_pos, bar.get_y() + bar.get_height()/2, f'{width:.2f}', 
-                            va='center', ha='right', color='black', fontsize=10,
-                            bbox=dict(facecolor='white', alpha=0.7, pad=0.1, boxstyle='round'))
+                label_x_pos = width if width > 0 else width - 0.05
+                plt.text(label_x_pos, bar.get_y() + bar.get_height()/2, f'{width:.2f}', 
+                         va='center', ha='left' if width > 0 else 'right', color='black')
             
-            # 제목 및 라벨 설정
             plt.title('시험 점수와 주요 변수들의 상관관계', fontsize=16)
-            plt.xlabel('상관계수', fontsize=12)
-            
-            # x축 범위 조정 (여백 추가)
-            x_min, x_max = plt.xlim()
-            plt.xlim(x_min - 0.1, x_max + 0.15)  # 오른쪽에 더 많은 여백 추가
-            
-            # 그리드 추가하여 가독성 향상
-            plt.grid(axis='x', alpha=0.3)
-            
+            plt.xlabel('상관계수')
             plt.tight_layout()
-            plt.savefig(output_path, dpi=300, bbox_inches='tight')
+            plt.savefig(output_path, dpi=300)
             plt.close()
             print(f"4. 변수 중요도 시각화 완료: {output_path}")
         else:
@@ -294,67 +215,42 @@ def create_feature_importance_visualization(data, output_path):
 # 신경망 모델 구조 시각화
 def create_neural_network_architecture(output_path):
     try:
-        plt.figure(figsize=(14, 10))  # 더 큰 그림 크기
+        plt.figure(figsize=(12, 8))
         ax = plt.subplot(111)
         
         # 레이어와 노드 수 정의
         layers = [
-            {'name': '입력층', 'nodes': 12, 'color': 'lightblue'},  # 입력 변수 수는 데이터에 맞게 조정
-            {'name': '은닉층 1', 'nodes': 256, 'color': 'lightgreen'},
-            {'name': '은닉층 2', 'nodes': 128, 'color': 'lightgreen'},
-            {'name': '은닉층 3', 'nodes': 64, 'color': 'lightgreen'},
-            {'name': '은닉층 4', 'nodes': 32, 'color': 'lightgreen'},
-            {'name': '출력층', 'nodes': 1, 'color': 'salmon'}
+            {'name': 'Input Layer', 'nodes': 12},  # 입력 변수 수는 데이터에 맞게 조정
+            {'name': 'Hidden Layer 1', 'nodes': 256},
+            {'name': 'Hidden Layer 2', 'nodes': 128},
+            {'name': 'Hidden Layer 3', 'nodes': 64},
+            {'name': 'Hidden Layer 4', 'nodes': 32},
+            {'name': 'Output Layer', 'nodes': 1}
         ]
         
-        # 각 레이어 위치 계산 (수평 간격 확대)
-        layer_width = 2.0  # 레이어 간 간격 증가
+        # 각 레이어 위치 계산
+        layer_width = 1.5
         x_positions = [i * layer_width * 2 for i in range(len(layers))]
+        max_nodes = max(layer['nodes'] for layer in layers)
         
-        # 노드 표시를 위한 높이 계산
-        max_visible_nodes = 10  # 실제로 그릴 최대 노드 수
-        
-        # 일관된 간격을 위해 고정된 높이 사용
-        display_height = 12  # 고정된 표시 높이
-        node_radius = 0.3    # 노드 크기 증가
-        
-        # 레이어별 박스 그리기
+        # 레이어와 노드 그리기
         for i, (x, layer) in enumerate(zip(x_positions, layers)):
-            # 레이어 이름 (아래에 배치)
-            ax.text(x, -2.0, layer['name'], ha='center', fontsize=13, weight='bold')
-            
-            # 레이어 배경박스 그리기 (옵션)
-            box_width = 1.2
-            box_height = display_height + 1
-            rect = plt.Rectangle((x-box_width/2, -1), box_width, box_height, 
-                                fill=True, alpha=0.1, color=layer['color'], 
-                                edgecolor='gray', linestyle='--')
-            ax.add_patch(rect)
-            
-            # 노드 수 텍스트 표시
-            ax.text(x, display_height + 1, f'노드 수: {layer["nodes"]}개', 
-                    ha='center', fontsize=11, bbox=dict(facecolor='white', alpha=0.7, boxstyle='round,pad=0.3'))
+            # 레이어 이름
+            ax.text(x, -0.5, layer['name'], ha='center', fontsize=11)
             
             # 노드 그리기 (일부 노드만 그리고 나머지는 생략 표시)
+            max_visible_nodes = 10
             nodes_to_draw = min(layer['nodes'], max_visible_nodes)
             
-            # 노드 간 간격 계산 (더 넓게)
-            if nodes_to_draw <= 1:
-                spacing = 0
-            else:
-                spacing = display_height / (nodes_to_draw + 1)
-            
             for j in range(nodes_to_draw):
-                # 노드 위치 계산 (균등 간격)
-                y = spacing * (j + 1)
-                
+                # 노드 위치 계산 (중앙 정렬)
+                y = (max_nodes - layer['nodes']) / 2 + j
                 if nodes_to_draw < layer['nodes'] and j == nodes_to_draw - 1:
                     # 생략 표시
-                    ax.text(x, y, '⋮', ha='center', va='center', fontsize=24, weight='bold')
+                    ax.text(x, y, '...', ha='center', va='center', fontsize=18)
                 else:
-                    # 노드 그리기 (크기 증가)
-                    circle = plt.Circle((x, y), node_radius, facecolor=layer['color'], 
-                                      edgecolor='blue', alpha=0.8, zorder=10)
+                    # 노드 그리기
+                    circle = plt.Circle((x, y), 0.1, facecolor='skyblue', edgecolor='blue')
                     ax.add_patch(circle)
                 
                 # 이전 레이어와 연결선 그리기 (첫 번째 레이어 제외)
@@ -363,57 +259,28 @@ def create_neural_network_architecture(output_path):
                     prev_x = x_positions[i-1]
                     prev_nodes_to_draw = min(prev_layer['nodes'], max_visible_nodes)
                     
-                    # 이전 레이어 노드 간격 계산
-                    if prev_nodes_to_draw <= 1:
-                        prev_spacing = 0
-                    else:
-                        prev_spacing = display_height / (prev_nodes_to_draw + 1)
-                    
                     for k in range(prev_nodes_to_draw):
-                        prev_y = prev_spacing * (k + 1)
-                        
+                        prev_y = (max_nodes - prev_layer['nodes']) / 2 + k
                         if prev_nodes_to_draw < prev_layer['nodes'] and k == prev_nodes_to_draw - 1:
                             continue  # 생략된 노드는 연결선 그리지 않음
                         
                         # 모든 연결을 그리면 복잡해지므로 일부만 그림
-                        if (j % 3 == 0 and k % 3 == 0) or (i == len(layers) - 1) or (nodes_to_draw <= 3):
-                            ax.plot([prev_x, x], [prev_y, y], 'gray', alpha=0.15, linewidth=0.5, zorder=1)
+                        if (j % 3 == 0 and k % 3 == 0) or (i == len(layers) - 1):
+                            ax.plot([prev_x, x], [prev_y, y], 'gray', alpha=0.3, linewidth=0.5)
             
-            # 활성화 함수와 Dropout 표시 (별도의 텍스트 박스로)
+            # 활성화 함수와 Dropout 표시
             if 0 < i < len(layers) - 1:
-                params = [
-                    {'text': 'ReLU 활성화', 'color': 'green', 'y_offset': 0},
-                    {'text': f'Dropout ({0.3 if i==1 else 0.2 if i==2 else 0.1})', 'color': 'red', 'y_offset': -1.2},
-                    {'text': 'BatchNorm', 'color': 'purple', 'y_offset': -2.4}
-                ]
-                
-                for param in params:
-                    # 레이어 사이에 텍스트 배치
-                    mid_x = (x_positions[i-1] + x) / 2
-                    ax.text(mid_x, display_height/2 + param['y_offset'], param['text'], 
-                            ha='center', color=param['color'], fontsize=9,
-                            bbox=dict(facecolor='white', alpha=0.7, boxstyle='round,pad=0.2'),
-                            rotation=0, zorder=20)
+                ax.text(x, max_nodes + 0.5, 'ReLU', ha='center', color='green', fontsize=9)
+                ax.text(x, max_nodes + 1, f'Dropout ({0.3 if i==1 else 0.2 if i==2 else 0.1})', ha='center', color='red', fontsize=9)
+                ax.text(x, max_nodes + 1.5, 'BatchNorm', ha='center', color='purple', fontsize=9)
         
-        ax.set_xlim(-1.0, max(x_positions) + 1.0)
-        ax.set_ylim(-3.0, display_height + 3)
+        ax.set_xlim(-0.5, max(x_positions) + 0.5)
+        ax.set_ylim(-1, max_nodes + 2)
         ax.axis('off')
         
-        # 범례 추가
-        legend_elements = [
-            plt.Line2D([0], [0], marker='o', color='w', markerfacecolor='lightblue', markersize=10, label='입력층'),
-            plt.Line2D([0], [0], marker='o', color='w', markerfacecolor='lightgreen', markersize=10, label='은닉층'),
-            plt.Line2D([0], [0], marker='o', color='w', markerfacecolor='salmon', markersize=10, label='출력층')
-        ]
-        ax.legend(handles=legend_elements, loc='upper center', ncol=3, frameon=True, bbox_to_anchor=(0.5, 1.05))
-        
-        # 추가 설명
-        plt.figtext(0.5, 0.02, '* 실제 구현된 DNN 모델의 구조를 간략화하여 표현한 다이어그램', 
-                  ha='center', fontsize=10, style='italic')
-        
-        plt.title('심층 신경망(DNN) 모델 구조', fontsize=18, pad=20)
-        plt.tight_layout(rect=[0, 0.03, 1, 0.97])  # 여백 조정
-        plt.savefig(output_path, dpi=300, bbox_inches='tight')
+        plt.title('심층 신경망(DNN) 모델 구조', fontsize=16)
+        plt.tight_layout()
+        plt.savefig(output_path, dpi=300)
         plt.close()
         print(f"5. 신경망 모델 구조 시각화 완료: {output_path}")
     except Exception as e:
