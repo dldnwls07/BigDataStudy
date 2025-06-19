@@ -552,17 +552,17 @@ def create_train_test_distribution_comparison(train_data, test_data, output_path
     except Exception as e:
         print(f"학습/테스트 데이터 분포 비교 생성 중 오류 발생: {e}")
 
-# 실행
-if __name__ == "__main__":
+# 프로젝트에 사용된 기술 스택, 모듈, 알고리즘, 라이브러리 시각화
+def create_project_technologies_visualization(output_path):
+    """프로젝트에 사용된 기술 스택, 모듈, 알고리즘, 라이브러리 시각화"""
     try:
-        # 1. 데이터셋 기본 통계량
-        create_dataset_summary(train_data, f"{output_dir}/dataset_summary.png")
+        plt.figure(figsize=(14, 10))
+        ax = plt.subplot(111)
+        ax.axis('off')
         
-        # 2. 변수 분포 히스토그램
-        create_distribution_plots(train_data, f"{output_dir}/variable_distributions.png")
-        
-        # 3. 데이터 처리 과정 시각화
-        create_data_pipeline_visualization(f"{output_dir}/data_pipeline.png")
+        # 배경색 설정
+        fig = plt.gcf()
+        fig.patch.set_facecolor('#f5f5f5')
         
         # 4. 변수 중요도 시각화
         create_feature_importance_visualization(train_data, f"{output_dir}/feature_importance.png")

@@ -294,17 +294,21 @@ def create_feature_importance_visualization(data, output_path):
 # 신경망 모델 구조 시각화
 def create_neural_network_architecture(output_path):
     try:
+        # 한글 폰트 명시적으로 다시 설정
+        plt.rcParams['font.family'] = 'Malgun Gothic'
+        plt.rcParams['axes.unicode_minus'] = False
+        
         plt.figure(figsize=(14, 10))  # 더 큰 그림 크기
         ax = plt.subplot(111)
         
         # 레이어와 노드 수 정의
         layers = [
-            {'name': '입력층', 'nodes': 12, 'color': 'lightblue'},  # 입력 변수 수는 데이터에 맞게 조정
-            {'name': '은닉층 1', 'nodes': 256, 'color': 'lightgreen'},
-            {'name': '은닉층 2', 'nodes': 128, 'color': 'lightgreen'},
-            {'name': '은닉층 3', 'nodes': 64, 'color': 'lightgreen'},
-            {'name': '은닉층 4', 'nodes': 32, 'color': 'lightgreen'},
-            {'name': '출력층', 'nodes': 1, 'color': 'salmon'}
+            {'name': 'Input', 'nodes': 12, 'color': 'lightblue', 'kr_name': '입력층'},  # 입력 변수 수는 데이터에 맞게 조정
+            {'name': 'Hidden 1', 'nodes': 256, 'color': 'lightgreen', 'kr_name': '은닉층 1'},
+            {'name': 'Hidden 2', 'nodes': 128, 'color': 'lightgreen', 'kr_name': '은닉층 2'},
+            {'name': 'Hidden 3', 'nodes': 64, 'color': 'lightgreen', 'kr_name': '은닉층 3'},
+            {'name': 'Hidden 4', 'nodes': 32, 'color': 'lightgreen', 'kr_name': '은닉층 4'},
+            {'name': 'Output', 'nodes': 1, 'color': 'salmon', 'kr_name': '출력층'}
         ]
         
         # 각 레이어 위치 계산 (수평 간격 확대)
@@ -482,9 +486,9 @@ def create_key_findings_visualization(output_path):
         findings = [
             "공부 시간은 성적과 강한 양의 상관관계 (r=0.65)",
             "이전 시험 성적은 현재 성적의 가장 강력한 예측 변수 (r=0.78)",
-            "높은 학습 의욕은 성적 향상에 긍정적 요소",
+            "높은 학습 의욕은 성적 향상에 중요한 요소",
             "학습 자원 접근성이 높을수록 성적이 좋음",
-            "부모 참여도가 높을수록 시험점수 증가에 영향"
+            "부모 참여도가 높을수록 공부 시간 효율이 증가"
         ]
         
         # 교육적 시사점
